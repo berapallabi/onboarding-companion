@@ -100,3 +100,13 @@ export const userProgress = pgTable("user_progress", {
     completed: boolean("completed").default(false),
     completedAt: timestamp("completed_at"),
 });
+
+export const documents = pgTable("document", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    category: text("category").default("general"), // e.g. 'engineering', 'it', 'hr'
+    url: text("url"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
