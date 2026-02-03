@@ -1,332 +1,99 @@
-'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { auth } from "@/auth";
+import { db } from "@/db";
+import { milestones, userProgress, users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
+import DashboardView, { Milestone } from "./view";
 
-interface Milestone {
-    id: string;
-    title: string;
-    description: string;
-    estimatedTime: number;
-    completed: boolean;
-    week: number;
-}
+export default async function DashboardPage() {
+    const session = await auth();
+    if (!session?.user?.id) {
+        redirect('/api/auth/signin');
+    }
 
-interface UserProfile {
-    role: string;
-    seniority: string;
-    skills: string[];
-}
+    const userId = session.user.id;
 
-export default function DashboardPage() {
-    const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [currentDay, setCurrentDay] = useState(3);
-    const [milestones, setMilestones] = useState<Milestone[]>([
-        {
-            id: 'ms-001',
-            title: 'Set up local development environment',
-            description: 'Install required tools, clone repositories, run app locally',
-            estimatedTime: 120,
-            completed: true,
-            week: 1
-        },
-        {
-            id: 'ms-002',
-            title: 'Understanding our architecture',
-            description: 'Learn high-level system design and key services',
-            estimatedTime: 90,
-            completed: true,
-            week: 1
-        },
-        {
-            id: 'ms-003',
-            title: 'Explore the codebase structure',
-            description: 'Navigate through main directories and understand organization',
-            estimatedTime: 60,
-            completed: false,
-            week: 1
-        },
-        {
-            id: 'ms-004',
-            title: 'Read authentication service docs',
-            description: 'Deep dive into our Auth_Service and OAuth implementation',
-            estimatedTime: 75,
-            completed: false,
-            week: 1
-        },
-        {
-            id: 'ms-010',
-            title: 'Pick your first "good first issue"',
-            description: 'Find a beginner-friendly bug and understand the requirements',
-            estimatedTime: 45,
-            completed: false,
-            week: 2
-        },
-        {
-            id: 'ms-011',
-            title: 'Submit your first PR',
-            description: 'Fix the issue, write tests, and submit for review',
-            estimatedTime: 180,
-            completed: false,
-            week: 2
+    // Fetch User
+    const user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+    });
+
+    if (!user) {
+        // Handle edge case: User logged in but record missing? 
+        // Or if using NextAuth default tables, maybe we need to ensure fields exist.
+        redirect('/');
+    }
+
+    // Fetch Milestones and Progress
+    // We want all milestones relevant to the user's role (or generated ones).
+    // In our simplified 'saveAssessment' flow, we created userProgress entries for all relevant milestones.
+    // So we can query 'userProgress' and join 'milestones'.
+
+    // Drizzle query API
+    const progress = await db.query.userProgress.findMany({
+        where: eq(userProgress.userId, userId),
+        with: {
+            // Relation needs to be defined in schema for 'with' to work. 
+            // I defined foreign keys in schema.ts, but did I define relations?
+            // I did NOT define `relations()` in schema.ts.
+            // So I cannot use `with`. I must use joins or separate queries.
         }
-    ]);
+    });
 
-    useEffect(() => {
-        const stored = localStorage.getItem('userProfile');
-        if (stored) {
-            setProfile(JSON.parse(stored));
-        }
-    }, []);
+    // Since I didn't set up drizzle relations yet, let's fetch milestones manually if needed or update schema.
+    // Let's implement manual join logic for MVP robustness without touching schema refactor right now.
 
-    const toggleMilestone = (id: string) => {
-        setMilestones(milestones.map(m =>
-            m.id === id ? { ...m, completed: !m.completed } : m
-        ));
-    };
+    // 1. Get all progress items
+    // 2. Get milestone details for these items
 
-    const week1Milestones = milestones.filter(m => m.week === 1);
-    const week2Milestones = milestones.filter(m => m.week === 2);
-    const completedCount = milestones.filter(m => m.completed).length;
-    const progressPercentage = (completedCount / milestones.length) * 100;
+    const progressIds = progress.map(p => p.milestoneId);
 
-    const todaysFocus = milestones.filter(m => !m.completed).slice(0, 2);
+    let userMilestones: Milestone[] = [];
+
+    if (progressIds.length > 0) {
+        // Fetch milestone details
+        // In Drizzle, 'inArray' is efficient.
+        // const milestoneDetails = await db.select().from(milestones).where(inArray(milestones.id, progressIds));
+
+        // Let's rely on `db.query.milestones.findMany` but I need `inArray` operator.
+        // It's cleaner to just join.
+
+        const results = await db
+            .select({
+                id: milestones.id,
+                title: milestones.title,
+                description: milestones.description,
+                estimatedTime: milestones.estimatedTime,
+                week: milestones.week,
+                completed: userProgress.completed,
+                progressId: userProgress.id
+            })
+            .from(userProgress)
+            .innerJoin(milestones, eq(userProgress.milestoneId, milestones.id))
+            .where(eq(userProgress.userId, userId));
+
+        userMilestones = results.map(r => ({
+            id: r.id, // Using milestone ID as the key for toggling. 
+            // But wait, my action uses 'milestoneId' to find progress.
+            // My view expects 'id' to pass to toggle.
+            // So if I pass milestone.id, the action works.
+            title: r.title,
+            description: r.description || '',
+            estimatedTime: r.estimatedTime || 0,
+            week: r.week,
+            completed: r.completed || false
+        }));
+    }
 
     return (
-        <div className="min-h-screen p-4 md:p-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8 fade-in">
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h1 className="text-4xl font-bold mb-2">
-                                Welcome, {profile?.role === 'engineering' ? 'Engineer' : 'Team Member'}! 👋
-                            </h1>
-                            <p className="text-muted-foreground">
-                                Day {currentDay} • Week 1 • {profile?.seniority || 'Mid'} Level
-                            </p>
-                        </div>
-
-                        <Link href="/companion" className="btn-primary">
-                            <svg className="inline-block mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            Ask Companion
-                        </Link>
-                    </div>
-
-                    {/* Overall Progress */}
-                    <div className="glass-card p-6 gradient-border">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-semibold">Your Onboarding Progress</h3>
-                            <span className="text-sm font-medium text-primary">{Math.round(progressPercentage)}%</span>
-                        </div>
-                        <div className="progress-bar mb-3">
-                            <div className="progress-fill" style={{ width: `${progressPercentage}%` }}></div>
-                        </div>
-                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                            <span>{completedCount} of {milestones.length} milestones completed</span>
-                            <span className="text-border">•</span>
-                            <span>🎯 On track to complete Week 1 by Day 5</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="grid lg:grid-cols-3 gap-8">
-                    {/* Left Column - Today's Focus */}
-                    <div className="lg:col-span-2">
-                        <div className="mb-8 slide-in">
-                            <h2 className="text-2xl font-bold mb-4">Today's Focus 🎯</h2>
-                            <p className="text-muted-foreground mb-6">
-                                Let's tackle these key milestones. You're doing great!
-                            </p>
-
-                            <div className="space-y-4">
-                                {todaysFocus.map((milestone, index) => (
-                                    <div
-                                        key={milestone.id}
-                                        className={`milestone-card ${milestone.completed ? 'milestone-card-completed' : ''}`}
-                                        style={{ animationDelay: `${index * 100}ms` }}
-                                    >
-                                        <div className="flex items-start gap-4">
-                                            <button
-                                                onClick={() => toggleMilestone(milestone.id)}
-                                                className={`flex-shrink-0 w-6 h-6 rounded-full border-2 transition-all duration-300 ${milestone.completed
-                                                        ? 'bg-emerald-500 border-emerald-500'
-                                                        : 'border-muted-foreground hover:border-primary'
-                                                    }`}
-                                            >
-                                                {milestone.completed && (
-                                                    <svg className="w-full h-full text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                    </svg>
-                                                )}
-                                            </button>
-
-                                            <div className="flex-1">
-                                                <h3 className={`font-semibold text-lg mb-1 ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}>
-                                                    {milestone.title}
-                                                </h3>
-                                                <p className="text-sm text-muted-foreground mb-3">
-                                                    {milestone.description}
-                                                </p>
-
-                                                <div className="flex items-center gap-4">
-                                                    <span className="badge badge-info">
-                                                        ⏱️ {milestone.estimatedTime} min
-                                                    </span>
-                                                    {!milestone.completed && (
-                                                        <button className="text-sm text-primary hover:underline">
-                                                            View resources →
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Week 1 Milestones */}
-                        <div className="mb-8">
-                            <h2 className="text-2xl font-bold mb-4">Week 1: Foundation</h2>
-                            <div className="space-y-3">
-                                {week1Milestones.map((milestone, index) => (
-                                    <div
-                                        key={milestone.id}
-                                        className={`milestone-card ${milestone.completed ? 'milestone-card-completed' : ''}`}
-                                        style={{ animationDelay: `${index * 50}ms` }}
-                                        onClick={() => toggleMilestone(milestone.id)}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 transition-all ${milestone.completed
-                                                    ? 'bg-emerald-500 border-emerald-500'
-                                                    : 'border-muted-foreground'
-                                                }`}>
-                                                {milestone.completed && (
-                                                    <svg className="w-full h-full text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                    </svg>
-                                                )}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className={`font-medium ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}>
-                                                    {milestone.title}
-                                                </div>
-                                            </div>
-                                            <span className="text-sm text-muted-foreground">
-                                                {milestone.estimatedTime} min
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Week 2 Preview */}
-                        <div>
-                            <h2 className="text-2xl font-bold mb-4">Week 2: First Contribution</h2>
-                            <div className="space-y-3 opacity-60">
-                                {week2Milestones.map((milestone) => (
-                                    <div key={milestone.id} className="glass-card p-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-muted-foreground"></div>
-                                            <div className="flex-1">
-                                                <div className="font-medium">{milestone.title}</div>
-                                            </div>
-                                            <span className="badge badge-warning">🔒 Unlocks Day 6</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right Column - Stats & Quick Actions */}
-                    <div className="space-y-6">
-                        {/* Stats Card */}
-                        <div className="glass-card p-6">
-                            <h3 className="font-semibold mb-4">Your Stats</h3>
-                            <div className="space-y-4">
-                                <div>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-sm text-muted-foreground">Milestones</span>
-                                        <span className="font-semibold">{completedCount}/{milestones.length}</span>
-                                    </div>
-                                    <div className="progress-bar h-1.5">
-                                        <div className="progress-fill" style={{ width: `${progressPercentage}%` }}></div>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between py-3 border-t border-border">
-                                    <span className="text-sm text-muted-foreground">Current Streak</span>
-                                    <span className="font-semibold">🔥 {currentDay} days</span>
-                                </div>
-
-                                <div className="flex items-center justify-between py-3 border-t border-border">
-                                    <span className="text-sm text-muted-foreground">Avg. Completion</span>
-                                    <span className="font-semibold text-emerald-400">2.3 days faster</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Quick Actions */}
-                        <div className="glass-card p-6">
-                            <h3 className="font-semibold mb-4">Quick Actions</h3>
-                            <div className="space-y-3">
-                                <Link href="/companion" className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-                                            💬
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="font-medium text-sm">Ask Companion</div>
-                                            <div className="text-xs text-muted-foreground">Get instant answers</div>
-                                        </div>
-                                    </div>
-                                </Link>
-
-                                <button className="block w-full p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-left">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-                                            📚
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="font-medium text-sm">Browse Docs</div>
-                                            <div className="text-xs text-muted-foreground">Top resources for you</div>
-                                        </div>
-                                    </div>
-                                </button>
-
-                                <button className="block w-full p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-left">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
-                                            👥
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="font-medium text-sm">Connect</div>
-                                            <div className="text-xs text-muted-foreground">Meet your team</div>
-                                        </div>
-                                    </div>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Encouragement */}
-                        <div className="glass-card p-6 gradient-border">
-                            <div className="text-center">
-                                <div className="text-3xl mb-3">🎉</div>
-                                <div className="font-semibold mb-2">You're doing great!</div>
-                                <div className="text-sm text-muted-foreground">
-                                    You're ahead of 73% of engineers at this stage. Keep it up!
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <DashboardView
+            profile={{
+                role: user.role || 'member',
+                seniority: user.seniority || 'mid',
+                name: user.name
+            }}
+            initialMilestones={userMilestones}
+        />
     );
 }

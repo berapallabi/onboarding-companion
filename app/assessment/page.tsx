@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { saveAssessment } from './actions';
 
 interface AssessmentData {
     role: string;
@@ -53,13 +54,21 @@ export default function AssessmentPage() {
         });
     };
 
+    const handleSubmit = async () => {
+        const formData = new FormData();
+        formData.append('role', data.role);
+        formData.append('seniority', data.seniority);
+        formData.append('skills', JSON.stringify(data.skills));
+        formData.append('goals', ''); // Optional goals
+
+        await saveAssessment(formData);
+    };
+
     const handleNext = () => {
         if (step < 3) {
             setStep(step + 1);
         } else {
-            // Save to localStorage for demo
-            localStorage.setItem('userProfile', JSON.stringify(data));
-            router.push('/dashboard');
+            handleSubmit();
         }
     };
 
@@ -173,8 +182,8 @@ export default function AssessmentPage() {
                                         key={skill}
                                         onClick={() => toggleSkill(skill)}
                                         className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${data.skills.includes(skill)
-                                                ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30'
-                                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                            ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30'
+                                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
                                             }`}
                                     >
                                         {skill}
