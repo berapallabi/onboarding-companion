@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { toggleMilestone } from './actions';
+import KnowledgeCheck from '@/components/KnowledgeCheck';
 
 export interface Milestone {
     id: string;
@@ -231,6 +232,9 @@ export default function DashboardView({ profile, initialMilestones }: DashboardV
                                 {/* ... Other stats remain same ... */}
                             </div>
                         </div>
+
+                        {/* Knowledge Check */}
+                        <KnowledgeCheck />
 
                         {/* Quick Actions */}
                         <div className="glass-card p-6">
