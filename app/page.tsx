@@ -82,7 +82,7 @@ export default function Home() {
         <div className="glass-card p-8 text-center gradient-border">
           <h2 className="text-2xl font-bold mb-4">Ready to get started?</h2>
           <p className="text-muted-foreground mb-6">
-            Let's personalize your onboarding experience. It only takes 2 minutes.
+            Let&apos;s personalize your onboarding experience. It only takes 2 minutes.
           </p>
 
           <Link href="/assessment" className="btn-primary inline-block">

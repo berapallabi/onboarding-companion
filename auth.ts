@@ -15,7 +15,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         verificationTokensTable: verificationTokens,
     }),
     providers: [
-        GitHub,
+        GitHub({
+            clientId: process.env.GITHUB_ID,
+            clientSecret: process.env.GITHUB_SECRET,
+        }),
     ],
     callbacks: {
         async session({ session, user }) {

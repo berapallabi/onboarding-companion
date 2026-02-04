@@ -11,7 +11,8 @@ interface AssessmentData {
 }
 
 export default function AssessmentPage() {
-    const router = useRouter();
+    // router is unused here, removing it if not needed or just ignoring lint
+    // const router = useRouter(); // if this was here
     const [step, setStep] = useState(1);
     const [data, setData] = useState<AssessmentData>({
         role: '',
@@ -102,7 +103,7 @@ export default function AssessmentPage() {
                 {/* Question 1: Role */}
                 {step === 1 && (
                     <div className="slide-in">
-                        <h2 className="text-3xl font-bold mb-3">What's your role?</h2>
+                        <h2 className="text-3xl font-bold mb-4 tracking-tight">Let&apos;s map your journey</h2>
                         <p className="text-muted-foreground mb-8">
                             This helps us personalize your onboarding experience
                         </p>

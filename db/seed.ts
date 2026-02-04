@@ -1,4 +1,5 @@
 
+import 'dotenv/config';
 import { db } from "./index";
 import { documents, milestones } from "./schema";
 import { DEFAULT_MILESTONES } from "../lib/constants";
@@ -30,6 +31,18 @@ async function seed() {
             content: "Every new hire is assigned a buddy (e.g., Sarah Chen for this session). Buddies help with technical setup, code reviews, and navigating team culture during the first 4 weeks.",
             category: "hr",
             url: "https://notion.so/buddy-program"
+        },
+        {
+            title: "Engineering Team Directory",
+            content: "Meet the team! Sarah Chen (Lead Engineer), Marcus Thorne (Product Manager), Elena Rodriguez (Lead Designer). Most team discussions happen in #product-engineering.",
+            category: "people",
+            url: "https://notion.so/team-directory"
+        },
+        {
+            title: "Who to Talk to for What",
+            content: "Backend/Architecture: Sarah Chen. UI/Design System: Elena Rodriguez. Product Roadmap/Prd: Marcus Thorne. HR/Admin: Jamie Loo.",
+            category: "people",
+            url: "https://notion.so/who-to-talk-to"
         }
     ];
 
@@ -37,9 +50,13 @@ async function seed() {
         await db.insert(documents).values(doc).onConflictDoNothing();
     }
 
-    console.log("🌱 Seeding global milestones...");
+    console.log("🌱 Clearing and re-seeding global milestones...");
+    try {
+        await db.delete(milestones);
+    } catch (e) {
+        console.log("Milestones table might be empty or missing, ignoring error.");
+    }
 
-    // Seed default milestones from constants if they don't exist
     for (const [role, items] of Object.entries(DEFAULT_MILESTONES)) {
         for (const m of items) {
             await db.insert(milestones).values({

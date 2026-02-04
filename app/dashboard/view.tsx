@@ -99,24 +99,21 @@ export default function DashboardView({ profile, initialMilestones }: DashboardV
                     <div className="grid lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2">
                             <div className="mb-8 slide-in">
-                                <h2 className="text-2xl font-bold mb-4">Today's Focus 🎯</h2>
-                                <p className="text-muted-foreground mb-6">Let's tackle these key milestones. You're doing great!</p>
+                                <h2 className="text-2xl font-bold mb-4">Today&apos;s Focus 🎯</h2>
+                                <p className="text-muted-foreground mb-6">Let&apos;s tackle these key milestones. You&apos;re doing great!</p>
                                 <div className="space-y-4">
                                     {todaysFocus.length > 0 ? todaysFocus.map((milestone, index) => (
-                                        <div key={milestone.id} className={`milestone-card ${milestone.completed ? 'milestone-card-completed' : ''}`} style={{ animationDelay: `${index * 100}ms` }}>
+                                        <div key={milestone.id} className={`milestone-card ${milestone.completed ? 'milestone-card-completed' : ''}`} style={{ animationDelay: `${index * 100}ms` }} onClick={() => handleToggle(milestone.id)}>
                                             <div className="flex items-start gap-4">
-                                                <button
-                                                    onClick={() => handleToggle(milestone.id)}
-                                                    className={`flex-shrink-0 w-6 h-6 rounded-full border-2 transition-all duration-300 ${milestone.completed ? 'bg-emerald-500 border-emerald-500' : 'border-muted-foreground hover:border-primary'}`}
-                                                >
+                                                <div className={`mt-1 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${milestone.completed ? 'bg-emerald-500 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'border-muted-foreground'}`}>
                                                     {milestone.completed && (
-                                                        <svg className="w-full h-full text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                         </svg>
                                                     )}
-                                                </button>
+                                                </div>
                                                 <div className="flex-1">
-                                                    <h3 className={`font-semibold text-lg mb-1 ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}>{milestone.title}</h3>
+                                                    <div className={`font-bold mb-1 ${milestone.completed ? 'line-through text-muted-foreground' : ''}`}>{milestone.title}</div>
                                                     <p className="text-sm text-muted-foreground mb-3">{milestone.description}</p>
                                                     <div className="flex items-center gap-4">
                                                         <span className="badge badge-info">⏱️ {milestone.estimatedTime} min</span>
@@ -128,7 +125,7 @@ export default function DashboardView({ profile, initialMilestones }: DashboardV
                                             </div>
                                         </div>
                                     )) : (
-                                        <div className="p-4 text-center text-muted-foreground bg-muted/20 rounded-lg">You're all caught up for today! 🎉</div>
+                                        <div className="p-4 text-center text-muted-foreground bg-muted/20 rounded-lg">You&apos;re all caught up for today! 🎉</div>
                                     )}
                                 </div>
                             </div>
@@ -193,16 +190,22 @@ export default function DashboardView({ profile, initialMilestones }: DashboardV
                                             <div className="flex-1"><div className="font-medium text-sm">Ask Companion</div><div className="text-xs text-muted-foreground">Get instant answers</div></div>
                                         </div>
                                     </Link>
-                                    <Link href="/companion?q=What are the most important docs for me?" className="block w-full p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-left">
+                                    <Link href="/docs" className="block w-full p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-left">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">📚</div>
                                             <div className="flex-1"><div className="font-medium text-sm">Browse Docs</div><div className="text-xs text-muted-foreground">Top resources for you</div></div>
                                         </div>
                                     </Link>
-                                    <Link href="/companion?q=Who should I connect with on the team?" className="block w-full p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-left">
+                                    <Link href="/connect" className="block w-full p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-left">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">👥</div>
                                             <div className="flex-1"><div className="font-medium text-sm">Connect</div><div className="text-xs text-muted-foreground">Meet your team</div></div>
+                                        </div>
+                                    </Link>
+                                    <Link href="/challenges" className="block w-full p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-left">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">🏆</div>
+                                            <div className="flex-1"><div className="font-medium text-sm">Challenges</div><div className="text-xs text-muted-foreground">Test your knowledge</div></div>
                                         </div>
                                     </Link>
                                 </div>
@@ -210,8 +213,8 @@ export default function DashboardView({ profile, initialMilestones }: DashboardV
                             <div className="glass-card p-6 gradient-border">
                                 <div className="text-center">
                                     <div className="text-3xl mb-3">🎉</div>
-                                    <div className="font-semibold mb-2">You're doing great!</div>
-                                    <div className="text-sm text-muted-foreground">You're ahead of 73% of engineers at this stage. Keep it up!</div>
+                                    <div className="font-semibold mb-2">You&apos;re doing great!</div>
+                                    <div className="text-sm text-muted-foreground">You&apos;re ahead of 73% of engineers at this stage. Keep it up!</div>
                                 </div>
                             </div>
                         </div>
@@ -219,9 +222,9 @@ export default function DashboardView({ profile, initialMilestones }: DashboardV
                 ) : (
                     <div className="glass-card p-12 text-center max-w-2xl mx-auto mt-12 fade-in">
                         <div className="text-5xl mb-6">🚀</div>
-                        <h2 className="text-2xl font-bold mb-4">Let's build your journey!</h2>
+                        <h2 className="text-2xl font-bold mb-4">Let&apos;s build your journey!</h2>
                         <p className="text-muted-foreground mb-8">
-                            It looks like you haven't started your personalized onboarding yet.
+                            It looks like you haven&apos;t started your personalized onboarding yet.
                             Complete our 2-minute assessment to unlock your custom milestones and AI companion.
                         </p>
                         <Link href="/assessment" className="btn-primary px-8 py-3 text-lg">Build My Journey →</Link>

@@ -4,13 +4,12 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-interface Message {
+// Match AI SDK 6.0 UIMessage structure if possible or use any for flexibility during migration
+interface UIMessage {
     id: string;
-    role: 'user' | 'assistant';
-    content: string;
-    confidence?: 'high' | 'medium' | 'low';
-    sources?: { title: string; url: string }[];
-    timestamp: Date;
+    role: 'user' | 'assistant' | 'system';
+    parts: Array<{ type: 'text'; text: string;[key: string]: any }>;
+    [key: string]: any;
 }
 
 import { useChat } from '@ai-sdk/react';
@@ -22,15 +21,30 @@ function CompanionContent() {
     const initialQuery = searchParams.get('q');
     const hasRun = useRef(false);
     const [localInput, setLocalInput] = useState('');
+    const lastProcessedQuery = useRef<string | null>(null);
 
-    // @ts-expect-error SDK usage variation
-    const { messages, append, isLoading } = useChat();
+    // AI SDK 6.0 usage
+    const { messages, sendMessage, status, setMessages } = useChat();
+    const isLoading = status === 'streaming' || status === 'submitted';
+
+    // Helper to extract text from new UIMessage parts structure
+    const getMessageText = (message: any) => {
+        if (message.text) return message.text;
+        if (message.content) return message.content;
+        if (message.parts) {
+            return message.parts
+                .filter((p: any) => p.type === 'text')
+                .map((p: any) => p.text)
+                .join('');
+        }
+        return '';
+    };
 
     const displayMessages = messages.length > 0 ? messages : [
         {
             id: '1',
             role: 'assistant',
-            content: "Hi! I'm your onboarding companion. 👋 I'm here to help you navigate your first few weeks. You can ask me anything - where to find documents, how things work, or even just to explain unfamiliar terms. No question is too basic!",
+            parts: [{ type: 'text', text: "Hi! I'm your onboarding companion. 👋 I'm here to help you navigate your first few weeks. You can ask me anything - where to find documents, how things work, or even just to explain unfamiliar terms. No question is too basic!" }],
             createdAt: new Date()
         }
     ];
@@ -47,9 +61,8 @@ function CompanionContent() {
 
     const handleQuickSend = async (text: string) => {
         if (!text.trim()) return;
-        await append({
-            role: 'user',
-            content: text
+        await sendMessage({
+            text: text
         });
     };
 
@@ -60,22 +73,20 @@ function CompanionContent() {
         const content = localInput;
         setLocalInput(''); // Clear immediately
 
-        await append({
-            role: 'user',
-            content: content
+        await sendMessage({
+            text: content
         });
     };
 
     // Auto-send initial query
     useEffect(() => {
-        if (initialQuery && !hasRun.current) {
-            hasRun.current = true;
-            append({
-                role: 'user',
-                content: initialQuery
-            });
+        if (initialQuery && initialQuery !== lastProcessedQuery.current) {
+            lastProcessedQuery.current = initialQuery;
+            // Clear messages and send new query to simulate a fresh search from dashboard
+            setMessages([]);
+            sendMessage({ text: initialQuery });
         }
-    }, [initialQuery, append]);
+    }, [initialQuery, sendMessage, setMessages]);
 
     // Delete getResponse and mockResponses.
 
@@ -116,7 +127,7 @@ function CompanionContent() {
             <div className="flex-1 overflow-y-auto">
                 <div className="max-w-4xl mx-auto px-4 py-8">
                     <div className="space-y-6">
-                        {(displayMessages as any[]).map((message, index) => (
+                        {displayMessages.map((message: any, index: number) => (
                             <div
                                 key={message.id}
                                 className={`fade-in ${message.role === 'user' ? 'flex justify-end' : ''}`}
@@ -132,7 +143,9 @@ function CompanionContent() {
                                             </div>
                                             <div className="flex-1">
                                                 <div className="chat-bubble-assistant">
-                                                    <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                                                    <p className="whitespace-pre-wrap leading-relaxed">
+                                                        {getMessageText(message)}
+                                                    </p>
                                                 </div>
                                                 <div className="flex items-center gap-3 mt-2 ml-1">
                                                     <span className="text-xs text-muted-foreground">
@@ -144,7 +157,7 @@ function CompanionContent() {
                                     </div>
                                 ) : (
                                     <div className="chat-bubble-user">
-                                        <p className="leading-relaxed">{message.content}</p>
+                                        <p className="leading-relaxed">{getMessageText(message)}</p>
                                     </div>
                                 )}
                             </div>

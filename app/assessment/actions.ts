@@ -7,7 +7,6 @@ import { db } from "@/db";
 import { assessments, users, milestones, userProgress } from "@/db/schema";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { DEFAULT_MILESTONES } from "@/lib/constants";
 import { eq, or, isNull } from "drizzle-orm";
 
 export async function saveAssessment(formData: FormData) {

@@ -3,7 +3,7 @@ import { streamText } from 'ai';
 import { db } from '@/db';
 import { documents } from '@/db/schema';
 import { auth } from '@/auth';
-import { ilike, or } from 'drizzle-orm';
+import { ilike, or, eq } from 'drizzle-orm';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -15,16 +15,35 @@ export async function POST(req: Request) {
     }
 
     const { messages } = await req.json();
-    const lastMessage = messages[messages.length - 1]?.content || "";
+    const lastMsg = messages[messages.length - 1];
+    const lastMessage = lastMsg?.content ||
+        (lastMsg?.parts?.filter((p: any) => p.type === 'text').map((p: any) => p.text).join('')) ||
+        "";
 
     // "RAG Lite": Search for relevant context in the documents table
-    const keywords = lastMessage.split(' ').filter((w: string) => w.length > 3);
+    // Extract keywords and filter out common stop words
+    const stopWords = new Set(['what', 'where', 'how', 'should', 'with', 'your', 'those', 'most', 'important']);
+    const keywords = lastMessage
+        .toLowerCase()
+        .replace(/[?.,!]/g, '')
+        .split(' ')
+        .filter((w: string) => w.length > 3 && !stopWords.has(w));
+
     let contextDocs: any[] = [];
 
     if (keywords.length > 0) {
         contextDocs = await db.select().from(documents).where(
             or(...keywords.map((k: string) => ilike(documents.content, `%${k}%`)))
-        ).limit(3);
+        ).limit(5);
+    }
+
+    // Fallback: If no direct hits, check if the query relates to 'people' or 'docs'
+    if (contextDocs.length === 0) {
+        if (lastMessage.toLowerCase().includes('connect') || lastMessage.toLowerCase().includes('who')) {
+            contextDocs = await db.select().from(documents).where(eq(documents.category, 'people')).limit(3);
+        } else if (lastMessage.toLowerCase().includes('doc') || lastMessage.toLowerCase().includes('important')) {
+            contextDocs = await db.select().from(documents).where(or(eq(documents.category, 'engineering'), eq(documents.category, 'it'))).limit(3);
+        }
     }
 
     const contextString = contextDocs.length > 0
