@@ -19,6 +19,7 @@ export interface UserProfile {
     role: string;
     seniority: string;
     name?: string | null;
+    skills?: string[];
 }
 
 interface DashboardViewProps {
@@ -99,8 +100,21 @@ export default function DashboardView({ profile, initialMilestones }: DashboardV
                     <div className="grid lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2">
                             <div className="mb-8 slide-in">
-                                <h2 className="text-2xl font-bold mb-4">Today&apos;s Focus 🎯</h2>
-                                <p className="text-muted-foreground mb-6">Let&apos;s tackle these key milestones. You&apos;re doing great!</p>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-2xl font-bold">Today&apos;s Focus 🎯</h2>
+                                    {profile.skills && profile.skills.length > 0 && (
+                                        <div className="flex gap-2">
+                                            {profile.skills.slice(0, 3).map(skill => (
+                                                <span key={skill} className="badge badge-info text-[10px] py-1">#{skill}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-muted-foreground mb-6">
+                                    {profile.skills && profile.skills.length > 0
+                                        ? `Customizing your journey for ${profile.skills.join(', ')}. Let&apos;s level up!`
+                                        : `Let&apos;s tackle these key milestones. You&apos;re doing great!`}
+                                </p>
                                 <div className="space-y-4">
                                     {todaysFocus.length > 0 ? todaysFocus.map((milestone, index) => (
                                         <div key={milestone.id} className={`milestone-card ${milestone.completed ? 'milestone-card-completed' : ''}`} style={{ animationDelay: `${index * 100}ms` }} onClick={() => handleToggle(milestone.id)}>

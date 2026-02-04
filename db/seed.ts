@@ -43,6 +43,30 @@ async function seed() {
             content: "Backend/Architecture: Sarah Chen. UI/Design System: Elena Rodriguez. Product Roadmap/Prd: Marcus Thorne. HR/Admin: Jamie Loo.",
             category: "people",
             url: "https://notion.so/who-to-talk-to"
+        },
+        {
+            title: "Design System Tokens",
+            content: "Our design tokens are stored in Figma and exported via Style Dictionary. Colors: Primary Blue (#1e40af), Background Dark (#0f0f19). Typography: Inter for UI, Outfit for Headers.",
+            category: "design",
+            url: "https://notion.so/design-tokens"
+        },
+        {
+            title: "Product Roadmap Q3-Q4",
+            content: "Our main focus for the rest of the year is 'Global Expansion' and 'AI Integration'. We are launching the localized versions in October and the GPT-4 based companion in December.",
+            category: "product",
+            url: "https://notion.so/roadmap"
+        },
+        {
+            title: "Marketing Campaign Tone",
+            content: "Our brand voice is 'Expert yet approachable'. Avoid jargon where possible. Focus on 'Empowerment' and 'Clarity'. Review the voice-and-tone.pdf for examples.",
+            category: "marketing",
+            url: "https://notion.so/marketing-tone"
+        },
+        {
+            title: "Data Ethics & Privacy",
+            content: "We strictly follow GDPR and CCPA guidelines. No PII should ever be logged in plain text. Always use our internal hashing service for user identifiers.",
+            category: "it",
+            url: "https://notion.so/privacy"
         }
     ];
 
@@ -51,20 +75,16 @@ async function seed() {
     }
 
     console.log("🌱 Clearing and re-seeding global milestones...");
-    try {
-        await db.delete(milestones);
-    } catch (e) {
-        console.log("Milestones table might be empty or missing, ignoring error.");
-    }
-
-    for (const [role, items] of Object.entries(DEFAULT_MILESTONES)) {
-        for (const m of items) {
+    await db.delete(milestones);
+    for (const [role, list] of Object.entries(DEFAULT_MILESTONES)) {
+        for (const m of list) {
             await db.insert(milestones).values({
                 title: m.title,
                 description: m.description,
                 week: m.week,
                 estimatedTime: m.estimatedTime,
-                roleTarget: role === 'general' ? null : role
+                roleTarget: role === 'general' ? null : role,
+                skillTarget: m.skillTarget || null
             }).onConflictDoNothing();
         }
     }

@@ -21,6 +21,7 @@ export const users = pgTable("user", {
     image: text("image"),
     role: text("role"), // 'engineering', 'design', 'product', 'marketing'
     seniority: text("seniority"), // 'junior', 'mid', 'senior'
+    skills: jsonb("skills").$type<string[]>(),
     onboardingStartDate: timestamp("onboarding_start_date"),
 });
 
@@ -86,6 +87,7 @@ export const milestones = pgTable("milestone", {
     description: text("description"),
     week: integer("week").notNull(),
     roleTarget: text("role_target"), // null means all roles
+    skillTarget: text("skill_target"), // null means any/all within role
     estimatedTime: integer("estimated_time"), // minutes
 });
 

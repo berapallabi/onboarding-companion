@@ -4,9 +4,43 @@ import KnowledgeCheck from '@/components/KnowledgeCheck';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 
+import { db } from '@/db';
+import { users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+
 export default async function ChallengesPage() {
     const session = await auth();
-    if (!session) redirect('/api/auth/signin');
+    if (!session?.user?.id) redirect('/api/auth/signin');
+
+    const user = await db.query.users.findFirst({
+        where: eq(users.id, session.user.id),
+    });
+
+    const role = user?.role || 'engineering';
+
+    const roleQuests: Record<string, any[]> = {
+        engineering: [
+            { title: "The Documentarian", desc: "Read 5 basic engineering docs", prog: 60, xp: 50 },
+            { title: "First PR", desc: "Successfully merge a 'dodo' PR", prog: 0, xp: 250 },
+        ],
+        design: [
+            { title: "Pixel Perfect", desc: "Review the Neo-Arcade sticker sheet", prog: 80, xp: 50 },
+            { title: "Handover Hero", desc: "Shadow 2 design-dev syncs", prog: 50, xp: 150 },
+        ],
+        product: [
+            { title: "Visionary", desc: "Draft a follow-up to the 3-year vision", prog: 20, xp: 100 },
+            { title: "Backlog Master", desc: "Refine 10 user stories in Jira", prog: 40, xp: 200 },
+        ],
+        marketing: [
+            { title: "Brand Voice", desc: "Complete 3 brand tone exercises", prog: 90, xp: 50 },
+            { title: "Social Guru", desc: "Schedule a week of social posts", prog: 0, xp: 300 },
+        ]
+    };
+
+    const quests = [
+        ... (roleQuests[role] || roleQuests.engineering),
+        { title: "Social Butterfly", desc: "Schedule three 1-on-1 chats", prog: 33, xp: 100 },
+    ];
 
     return (
         <div className="min-h-screen p-8">
@@ -27,11 +61,11 @@ export default async function ChallengesPage() {
                                 <span className="p-2 bg-primary/20 rounded-lg">🎯</span>
                                 Current Challenge
                             </h2>
-                            <KnowledgeCheck />
+                            <KnowledgeCheck role={role} />
                         </section>
 
                         <section className="glass-card p-6">
-                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                                 <span className="p-2 bg-secondary/20 rounded-lg">🔥</span>
                                 Weekly Streaks
                             </h2>
@@ -58,11 +92,7 @@ export default async function ChallengesPage() {
                         <section className="glass-card p-6">
                             <h2 className="text-xl font-bold mb-6">Quest Log</h2>
                             <div className="space-y-4">
-                                {[
-                                    { title: "The Documentarian", desc: "Read 5 basic engineering docs", prog: 60, xp: 50 },
-                                    { title: "Social Butterfly", desc: "Schedule three 1-on-1 chats", prog: 33, xp: 100 },
-                                    { title: "First PR", desc: "Successfully merge a 'dodo' PR", prog: 0, xp: 250 },
-                                ].map((quest) => (
+                                {quests.map((quest) => (
                                     <div key={quest.title} className="p-4 rounded-xl border border-border bg-muted/10 group hover:border-primary/30 transition-all">
                                         <div className="flex justify-between items-start mb-2">
                                             <div>

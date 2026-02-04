@@ -11,23 +11,42 @@ interface Question {
     explanation: string;
 }
 
-export default function KnowledgeCheck() {
+interface KnowledgeCheckProps {
+    role?: string;
+}
+
+const QUESTIONS: Record<string, Question> = {
+    engineering: {
+        text: "How should you prefix your git branches for new features according to the guidelines?",
+        options: ["new-feature/", "feature/", "dev/", "feat-"],
+        correctIndex: 1,
+        explanation: "According to our Git Workflow guidelines, all new features should be on branches prefixed with 'feature/'."
+    },
+    design: {
+        text: "Which naming convention do we use for our core design tokens in Figma?",
+        options: ["camelCase", "kebab-case", "PascalCase", "snake_case"],
+        correctIndex: 1,
+        explanation: "Our design system uses 'kebab-case' for all tokens to ensure compatibility with our build tools."
+    },
+    product: {
+        text: "What is the primary theme for our Roadmap in Q4?",
+        options: ["Infrastructure Scalability", "Global Expansion", "Legacy System Cleanup", "Marketing Rebrand"],
+        correctIndex: 1,
+        explanation: "As stated in the 'Product Roadmap Q3-Q4' doc, our main focus for Q4 is 'Global Expansion'."
+    },
+    marketing: {
+        text: "What describes the tone of voice for our upcoming marketing campaign?",
+        options: ["Strict and corporate", "Expert yet approachable", "Playful and humorous", "Aggressive and bold"],
+        correctIndex: 1,
+        explanation: "Our 'Marketing Campaign Tone' doc defines our voice as 'Expert yet approachable'."
+    }
+};
+
+export default function KnowledgeCheck({ role = 'engineering' }: KnowledgeCheckProps) {
     const [status, setStatus] = useState<'idle' | 'active' | 'answered'>('idle');
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
-    // Mock question for implementation demo
-    // In production, this would be fetched from /api/knowledge-check
-    const question: Question = {
-        text: "How should you prefix your git branches for new features according to the guidelines?",
-        options: [
-            "new-feature/",
-            "feature/",
-            "dev/",
-            "feat-"
-        ],
-        correctIndex: 1,
-        explanation: "According to our Git Workflow guidelines, all new features should be on branches prefixed with 'feature/'."
-    };
+    const question = QUESTIONS[role as keyof typeof QUESTIONS] || QUESTIONS.engineering;
 
     const handleAnswer = (index: number) => {
         setSelectedOption(index);
@@ -66,7 +85,7 @@ export default function KnowledgeCheck() {
                     >
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-xs font-semibold text-primary uppercase">Quick Challenge</span>
-                            <span className="text-xs text-muted-foreground">Engineering Docs</span>
+                            <span className="text-xs text-muted-foreground">{role.charAt(0).toUpperCase() + role.slice(1)} Knowledge</span>
                         </div>
                         <h4 className="font-bold mb-4 text-lg leading-snug">
                             {question.text}

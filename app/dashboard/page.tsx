@@ -91,7 +91,8 @@ export default async function DashboardPage() {
             profile={{
                 role: user.role || 'member',
                 seniority: user.seniority || 'mid',
-                name: user.name
+                name: user.name,
+                skills: user.skills || []
             }}
             initialMilestones={userMilestones}
         />

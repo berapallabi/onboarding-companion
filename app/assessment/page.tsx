@@ -33,10 +33,26 @@ export default function AssessmentPage() {
         { id: 'senior', label: 'Senior', description: '5+ years of experience' }
     ];
 
-    const engineeringSkills = [
-        'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python',
-        'Java', 'Docker', 'Kubernetes', 'AWS', 'Git'
-    ];
+    const skillsByRole: Record<string, string[]> = {
+        engineering: [
+            'JavaScript', 'TypeScript', 'React', 'Node.js', 'Python',
+            'PostgreSQL', 'Docker', 'Kubernetes', 'AWS', 'Git', 'Next.js', 'GraphQL'
+        ],
+        design: [
+            'Figma', 'Adobe XD', 'Sketch', 'UI Design', 'UX Research',
+            'Prototyping', 'Design Systems', 'Atomic Design', 'Typography', 'Color Theory'
+        ],
+        product: [
+            'Agile/Scrum', 'Product Roadmap', 'User Stories', 'Market Research',
+            'A/B Testing', 'Data Analysis', 'Jira/Asana', 'Stakeholder Management', 'PRD Writing'
+        ],
+        marketing: [
+            'SEO', 'Content Strategy', 'Email Marketing', 'Google Analytics',
+            'Social Media', 'PPC Advertising', 'Brand Identity', 'Copywriting', 'CRM'
+        ]
+    };
+
+    const currentRoleSkills = skillsByRole[data.role as keyof typeof skillsByRole] || skillsByRole.engineering;
 
     const handleRoleSelect = (roleId: string) => {
         setData({ ...data, role: roleId });
@@ -178,7 +194,7 @@ export default function AssessmentPage() {
 
                         <div className="glass-card p-6 mb-8">
                             <div className="flex flex-wrap gap-3">
-                                {engineeringSkills.map((skill) => (
+                                {currentRoleSkills.map((skill: string) => (
                                     <button
                                         key={skill}
                                         onClick={() => toggleSkill(skill)}

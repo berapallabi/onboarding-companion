@@ -33,25 +33,35 @@ export async function saveAssessment(formData: FormData) {
 
     // Update User profile
     await db.update(users)
-        .set({ role, seniority, onboardingStartDate: new Date() })
+        .set({ role, seniority, skills, onboardingStartDate: new Date() })
         .where(eq(users.id, session.user.id));
 
     // Clear old progress to avoid stale IDs or duplicates
     await db.delete(userProgress).where(eq(userProgress.userId, session.user.id));
 
     // Generate Milestones
-    // We query the seeded milestones table instead of creating new ones
-    const relevantMilestones = await db.select()
+    // 1. Get all general milestones
+    // 2. Get milestones for the specific role
+    // 3. Get milestones for the specific technologies (if skillTarget matches selected skills)
+
+    const allRelevantMilestones = await db.select()
         .from(milestones)
         .where(
             or(
-                eq(milestones.roleTarget, role),
-                isNull(milestones.roleTarget)
+                isNull(milestones.roleTarget), // General
+                eq(milestones.roleTarget, role) // Role-specific
             )
         );
 
+    // Filter milestones:
+    // - Include if skillTarget is null (general/role-essential)
+    // - Include if skillTarget is in the user's selected skills
+    const filteredMilestones = allRelevantMilestones.filter(m =>
+        !m.skillTarget || skills.includes(m.skillTarget)
+    );
+
     // Create progress entries
-    for (const m of relevantMilestones) {
+    for (const m of filteredMilestones) {
         await db.insert(userProgress).values({
             userId: session.user.id,
             milestoneId: m.id,
