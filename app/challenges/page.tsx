@@ -17,6 +17,7 @@ export default async function ChallengesPage() {
     });
 
     const role = user?.role || 'engineering';
+    const userSkills = user?.skills || [];
 
     const roleQuests: Record<string, any[]> = {
         engineering: [
@@ -29,7 +30,7 @@ export default async function ChallengesPage() {
         ],
         product: [
             { title: "Visionary", desc: "Draft a follow-up to the 3-year vision", prog: 20, xp: 100 },
-            { title: "Backlog Master", desc: "Refine 10 user stories in Jira", prog: 40, xp: 200 },
+            { title: "Backlog Master", desc: "Refine 10 user stories", prog: 40, xp: 200 },
         ],
         marketing: [
             { title: "Brand Voice", desc: "Complete 3 brand tone exercises", prog: 90, xp: 50 },
@@ -37,8 +38,17 @@ export default async function ChallengesPage() {
         ]
     };
 
+    const techQuests: Record<string, any> = {
+        "React": { title: "Hook Master", desc: "Implement 3 custom hooks in the dashboard", prog: 10, xp: 150 },
+        "Kubernetes": { title: "Cluster Operator", desc: "Debug a failing pod in the staging namespace", prog: 0, xp: 200 },
+        "Figma": { title: "Component Architect", desc: "Build a reusable master component in our library", prog: 40, xp: 100 },
+        "Jira/Asana": { title: "Ticket Titan", desc: "Automate 3 status transitions in your project", prog: 20, xp: 80 },
+        "SEO": { title: "Ranking Rebel", desc: "Improve the Lighthouse score for 3 landing pages", prog: 30, xp: 120 },
+    };
+
     const quests = [
         ... (roleQuests[role] || roleQuests.engineering),
+        ...userSkills.filter(s => techQuests[s]).map(s => techQuests[s]),
         { title: "Social Butterfly", desc: "Schedule three 1-on-1 chats", prog: 33, xp: 100 },
     ];
 

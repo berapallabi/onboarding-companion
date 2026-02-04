@@ -2,7 +2,7 @@
 import 'dotenv/config';
 import { db } from "./index";
 import { documents, milestones } from "./schema";
-import { DEFAULT_MILESTONES } from "../lib/constants";
+import { ROLE_MILESTONES, TECH_MILESTONES } from '../lib/constants';
 
 async function seed() {
     console.log("🌱 Seeding knowledge base...");
@@ -76,7 +76,9 @@ async function seed() {
 
     console.log("🌱 Clearing and re-seeding global milestones...");
     await db.delete(milestones);
-    for (const [role, list] of Object.entries(DEFAULT_MILESTONES)) {
+
+    // Seed Role Milestones
+    for (const [role, list] of Object.entries(ROLE_MILESTONES)) {
         for (const m of list) {
             await db.insert(milestones).values({
                 title: m.title,
@@ -84,8 +86,22 @@ async function seed() {
                 week: m.week,
                 estimatedTime: m.estimatedTime,
                 roleTarget: role === 'general' ? null : role,
-                skillTarget: m.skillTarget || null
-            }).onConflictDoNothing();
+                skillTarget: null
+            });
+        }
+    }
+
+    // Seed Tech Milestones
+    for (const [tech, list] of Object.entries(TECH_MILESTONES)) {
+        for (const m of list) {
+            await db.insert(milestones).values({
+                title: m.title,
+                description: m.description,
+                week: m.week,
+                estimatedTime: m.estimatedTime,
+                roleTarget: null,
+                skillTarget: tech
+            });
         }
     }
 
