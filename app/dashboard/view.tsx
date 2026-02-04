@@ -118,7 +118,18 @@ export default function DashboardView({ profile, initialMilestones }: DashboardV
                                                     <div className="flex items-center gap-4">
                                                         <span className="badge badge-info">⏱️ {milestone.estimatedTime} min</span>
                                                         {!milestone.completed && (
-                                                            <Link href={`/companion?q=Tell me more about ${milestone.title}`} className="text-sm text-primary hover:underline">View resources →</Link>
+                                                            <Link
+                                                                href={
+                                                                    milestone.title.toLowerCase().includes('buddy') ||
+                                                                        milestone.title.toLowerCase().includes('team intro') ||
+                                                                        milestone.title.toLowerCase().includes('introduction')
+                                                                        ? "/connect"
+                                                                        : `/docs?q=${encodeURIComponent(milestone.title)}`
+                                                                }
+                                                                className="text-sm text-primary hover:underline"
+                                                            >
+                                                                View resources →
+                                                            </Link>
                                                         )}
                                                     </div>
                                                 </div>

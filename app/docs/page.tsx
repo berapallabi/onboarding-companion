@@ -5,11 +5,21 @@ import Link from 'next/link';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 
-export default async function DocsPage() {
+export default async function DocsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
     const session = await auth();
     if (!session) redirect('/api/auth/signin');
 
-    const allDocs = await db.select().from(documents).orderBy(documents.category);
+    const query = (await searchParams).q?.toLowerCase();
+
+    let allDocs = await db.select().from(documents).orderBy(documents.category);
+
+    if (query) {
+        allDocs = allDocs.filter(doc =>
+            doc.title.toLowerCase().includes(query) ||
+            doc.content.toLowerCase().includes(query) ||
+            doc.category?.toLowerCase().includes(query)
+        );
+    }
 
     const docsByCategory = allDocs.reduce((acc, doc) => {
         const cat = doc.category || 'general';
