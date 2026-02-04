@@ -1,23 +1,23 @@
-
 export const DEFAULT_MILESTONES = {
     engineering: [
-        { title: "Complete System Setup", description: "Install VS Code, Docker, and Node.js", week: 1, estimatedTime: 120 },
-        { title: "First PR Merged", description: "Fix a small bug or add documentation", week: 1, estimatedTime: 240 },
-        { title: "Architecture Overview", description: "Read the system architecture docs", week: 1, estimatedTime: 60 },
-        { title: "Deploy to Staging", description: "Deploy your first change to staging", week: 2, estimatedTime: 180 },
+        { title: "Complete Local Dev Setup", description: "Follow the 'local-setup' guide in docs to configure VS Code, Docker, and the monorepo environment.", week: 1, estimatedTime: 120 },
+        { title: "Merge First 'Dodo' PR", description: "Fix a small linting error or documentation typo in our 'dodo' service to get familiar with the CI/CD pipeline.", week: 1, estimatedTime: 240 },
+        { title: "Review Architecture Overview", description: "Deep dive into the system architecture documents, specifically the Auth and Data Sync services.", week: 1, estimatedTime: 60 },
+        { title: "Deploy First Service change", description: "Shadow a senior engineer during a staging deployment and trigger your first service release.", week: 2, estimatedTime: 180 },
     ],
     design: [
-        { title: "Figma Setup", description: "Get access to Figma organization", week: 1, estimatedTime: 60 },
-        { title: "Design System 101", description: "Review the components library", week: 1, estimatedTime: 120 },
-        { title: "Shadow Session", description: "Shadow a senior designer", week: 1, estimatedTime: 60 },
+        { title: "Figma Library Access", description: "Get access to the 'Neo-Arcade' Figma organization and review the core design tokens.", week: 1, estimatedTime: 60 },
+        { title: "Design System Deep Dive", description: "Review the React component library and ensure alignment with our Atomic Design principles.", week: 1, estimatedTime: 120 },
+        { title: "Design-Dev Handover Shadow", description: "Shadow a senior designer during a handover session for an upcoming product feature.", week: 1, estimatedTime: 60 },
     ],
     product: [
-        { title: "Product Vision", description: "Read the 3-year vision doc", week: 1, estimatedTime: 60 },
-        { title: "Customer Interviews", description: "Watch 3 recorded interviews", week: 1, estimatedTime: 90 },
-        { title: "Backlog Review", description: "Review the current sprint backlog", week: 1, estimatedTime: 60 },
+        { title: "3-Year Product Vision", description: "Read the 3-year vision doc and prepare at least 3 questions for your session with the CPO.", week: 1, estimatedTime: 60 },
+        { title: "Analyze Customer Feedback", description: "Watch 3 recorded customer interviews from last month to understand current pain points.", week: 1, estimatedTime: 90 },
+        { title: "Sprint Backlog Refinement", description: "Review the current sprint backlog and participate in your first grooming session.", week: 1, estimatedTime: 60 },
     ],
     general: [
-        { title: "HR Onboarding", description: "Complete HR paperwork", week: 1, estimatedTime: 60 },
-        { title: "Team Intro", description: "Introduce yourself in Slack", week: 1, estimatedTime: 15 },
+        { title: "HR Compliance Onboarding", description: "Complete all mandatory HR paperwork and review the 'Remote-First' culture handbook.", week: 1, estimatedTime: 60 },
+        { title: "Team Introduction", description: "Post a brief intro in #general and #team-chat using our 'fun-fact' template.", week: 1, estimatedTime: 15 },
+        { title: "Buddy 1-on-1", description: "Schedule and complete your first coffee chat with your onboarding buddy.", week: 1, estimatedTime: 30 },
     ]
 };
