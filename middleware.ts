@@ -2,7 +2,10 @@
 import { auth } from "@/auth"
 
 export default auth((req) => {
-    if (!req.auth && (req.nextUrl.pathname.startsWith('/dashboard') || req.nextUrl.pathname.startsWith('/companion') || req.nextUrl.pathname.startsWith('/assessment'))) {
+    const protectedPaths = ['/dashboard', '/companion', '/assessment', '/docs', '/connect', '/challenges'];
+    const isProtected = protectedPaths.some(path => req.nextUrl.pathname.startsWith(path));
+
+    if (!req.auth && isProtected) {
         const newUrl = new URL("/api/auth/signin", req.nextUrl.origin)
         return Response.redirect(newUrl)
     }
