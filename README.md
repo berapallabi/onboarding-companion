@@ -85,6 +85,15 @@ Since this is a prototype, the following are simulated:
 - **Milestone Data**: Hardcoded sample engineering journey
 - **Document Links**: Placeholder Notion URLs
 
+## Documentation 📚
+
+To learn more about the project, architecture, and how to contribute, check out our internal documentation:
+
+- [**Product Overview**](./docs/PRODUCT.md) - Vision, core features, and user flows.
+- [**System Architecture**](./docs/ARCHITECTURE.md) - Technical design, data flow, and module breakdown.
+- [**Technology Stack**](./docs/TECH_STACK.md) - Details on our modern web and AI stack.
+- [**Contributing Guide**](./docs/CONTRIBUTING.md) - How to set up locally, seed the DB, and coding standards.
+
 ## Technology Stack
 
 - **Framework**: Next.js 14 (App Router)
