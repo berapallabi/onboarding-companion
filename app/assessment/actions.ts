@@ -37,6 +37,9 @@ export async function saveAssessment(formData: FormData) {
         .set({ role, seniority, onboardingStartDate: new Date() })
         .where(eq(users.id, session.user.id));
 
+    // Clear old progress to avoid stale IDs or duplicates
+    await db.delete(userProgress).where(eq(userProgress.userId, session.user.id));
+
     // Generate Milestones
     // We query the seeded milestones table instead of creating new ones
     const relevantMilestones = await db.select()
@@ -54,7 +57,7 @@ export async function saveAssessment(formData: FormData) {
             userId: session.user.id,
             milestoneId: m.id,
             completed: false
-        }).onConflictDoNothing();
+        });
     }
 
     revalidatePath('/dashboard');
